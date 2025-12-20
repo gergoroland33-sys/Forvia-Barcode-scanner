@@ -3,136 +3,156 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Industrial Part Search v2.1</title>
+<title>Industrial Control Hub v2.2</title>
 <style>
 :root {
---ok-bg: #064e3b; --ok-border: #10b981;
---err-bg: #7f1d1d; --err-border: #ef4444;
---bg: #0f172a; --panel: #1e293b;
+--ok-bg: #064e3b; --ok-glow: #10b981;
+--err-bg: #450a0a; --err-glow: #ef4444;
+--bg: #020617; --panel: #1e293b; --accent: #3b82f6;
 }
 
 body {
-font-family: 'Segoe UI', sans-serif;
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 background: var(--bg);
-color: white;
+color: #f8fafc;
 margin: 0;
-overflow: hidden;
 display: flex;
 height: 100vh;
+overflow: hidden;
 }
 
-.main-panel {
-flex: 2;
+/* Bal oldali vezérlő sáv */
+.sidebar {
+width: 320px;
+background: var(--panel);
+border-right: 1px solid #334155;
+display: flex;
+flex-direction: column;
+padding: 20px;
+box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+}
+
+/* Középső fő kijelző */
+.main-display {
+flex: 1;
+display: flex;
+flex-direction: column;
+position: relative;
+transition: background 0.2s ease;
+}
+
+.header-status {
+padding: 20px 40px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+background: rgba(15, 23, 42, 0.8);
+border-bottom: 1px solid #334155;
+}
+
+/* Kereső egység */
+.search-center {
+flex: 1;
 display: flex;
 flex-direction: column;
 align-items: center;
 justify-content: center;
-transition: background 0.15s ease;
-position: relative;
+padding: 40px;
 }
-
-.status-ok { background-color: var(--ok-bg) !important; }
-.status-error { background-color: var(--err-bg) !important; }
-
-.search-container { width: 85%; max-width: 900px; text-align: center; z-index: 10; }
 
 input {
 width: 100%;
-padding: 25px;
-font-size: 3.5rem;
-background: rgba(0,0,0,0.6);
-border: 4px solid #334155;
-border-radius: 20px;
-color: #60a5fa;
+max-width: 800px;
+padding: 30px;
+font-size: 4rem;
+background: #000;
+border: 4px solid var(--accent);
+border-radius: 24px;
+color: var(--accent);
 text-align: center;
 outline: none;
-font-family: 'Courier New', monospace;
-box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+font-family: 'Consolas', monospace;
+box-shadow: 0 0 40px rgba(59, 130, 246, 0.2);
 }
 
-.result-display { margin-top: 40px; min-height: 250px; }
-.part-name { font-size: 5.5rem; font-weight: 900; margin: 0; text-transform: uppercase; line-height: 1.1; }
-.location-info { font-size: 3rem; color: #94a3b8; margin-top: 10px; }
-
-.history-panel {
-flex: 0.7;
-background: var(--panel);
-border-left: 2px solid #334155;
-padding: 20px;
-display: flex;
-flex-direction: column;
-box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+/* Eredmény kártya */
+.result-card {
+margin-top: 50px;
+text-align: center;
+width: 100%;
 }
 
-.history-list { flex-grow: 1; overflow-y: auto; margin-top: 15px; }
-.history-item {
-padding: 12px;
-margin-bottom: 8px;
-border-radius: 10px;
-background: rgba(0,0,0,0.3);
-font-size: 0.95rem;
-border-left: 5px solid #3b82f6;
-animation: fadeIn 0.3s ease;
-}
-@keyframes fadeIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+.res-name { font-size: 6rem; font-weight: 900; margin: 0; line-height: 1; letter-spacing: -2px; }
+.res-loc { font-size: 3.5rem; color: #94a3b8; margin-top: 15px; font-weight: 300; }
 
-.hist-ok { border-color: #10b981; }
-.hist-err { border-color: #ef4444; }
-
-.filter-bar {
-position: absolute;
-top: 30px;
-left: 30px;
-display: flex;
-align-items: center;
-gap: 15px;
-background: rgba(30, 41, 59, 0.8);
-padding: 10px 20px;
-border-radius: 12px;
-border: 1px solid #475569;
-}
+/* Szűrő stílus */
+.filter-group { margin-bottom: 30px; }
+label { display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; }
 
 select {
-padding: 12px 20px;
+width: 100%;
+padding: 15px;
 background: #0f172a;
-color: white;
-border: 1px solid #3b82f6;
-border-radius: 8px;
-font-size: 1rem;
+color: #fff;
+border: 1px solid var(--accent);
+border-radius: 12px;
+font-size: 1.1rem;
 cursor: pointer;
-outline: none;
 }
 
-.loader-status { font-size: 0.8rem; color: #4ade80; margin-left: 10px; }
+/* Előzmények */
+.history-list {
+flex: 1;
+overflow-y: auto;
+margin-top: 10px;
+scrollbar-width: thin;
+}
+
+.history-item {
+padding: 15px;
+margin-bottom: 10px;
+background: rgba(0,0,0,0.4);
+border-radius: 12px;
+border-left: 5px solid #334155;
+font-size: 0.9rem;
+}
+.hist-ok { border-left-color: var(--ok-glow); background: rgba(16, 185, 129, 0.05); }
+.hist-err { border-left-color: var(--err-glow); background: rgba(239, 68, 68, 0.05); }
+
+/* Állapot színek */
+.bg-ok { background-color: var(--ok-bg) !important; }
+.bg-err { background-color: var(--err-bg) !important; }
 </style>
 </head>
 <body>
 
-<div class="main-panel" id="screen">
-<div class="filter-bar">
-<span style="font-weight: bold; color: #3b82f6;">SZŰRŐ:</span>
-<select id="modelFilter">
-<option value="all">ÖSSZES MODELL</option>
-<option value="bank">BANK ADATOK</option>
-<option value="ultetes">ÜLTETÉSI ADATOK</option>
+<div class="sidebar">
+<div class="filter-group">
+<label>Aktív Modell Szűrő</label>
+<select id="dynamicModelSelector">
+<option value="all">MINDEN MODELL</option>
 </select>
-<span id="loadStatus" class="loader-status">CSV: OK</span>
 </div>
 
-<div class="search-container">
-<input type="text" id="barcodeInput" placeholder="OLVASSON BE..." autofocus autocomplete="off">
-
-<div class="result-display">
-<div id="outPart" class="part-name">READY</div>
-<div id="outLoc" class="location-info">Várakozás...</div>
-</div>
-</div>
-</div>
-
-<div class="history-panel">
-<h3 style="margin-top:0;">🕒 ELŐZMÉNYEK</h3>
+<label>Utolsó 50 Művelet</label>
 <div id="historyList" class="history-list"></div>
-<button onclick="clearHistory()" style="margin-top:10px; padding:10px; background:#334155; color:white; border:none; border-radius:8px; cursor:pointer;">Lista törlése</button>
+<button onclick="location.reload()" style="margin-top:10px; padding:12px; background:#334155; color:white; border:none; border-radius:10px; cursor:pointer;">Frissítés</button>
+</div>
+
+<div class="main-display" id="screen">
+<div class="header-status">
+<div style="font-size: 1.2rem; font-weight: bold; color: var(--accent);">FORVIA | MASZK SCANNER</div>
+<div id="dbStatus" style="color: #4ade80;">Adatbázis: Betöltés...</div>
+</div>
+
+<div class="search-center">
+<input type="text" id="barcodeInput" placeholder="SCAN NOW" autofocus autocomplete="off">
+
+<div id="resultCard" class="result-card">
+<div id="outPart" class="res-name">READY</div>
+<div id="outLoc" class="res-loc">Csipogjon a kezdéshez</div>
+</div>
+</div>
 </div>
 
 <audio id="sndOk" src="https://actions.google.com/sounds/v1/communication/notification_high_intensity.ogg"></audio>
@@ -141,108 +161,101 @@ outline: none;
 <script>
 const input = document.getElementById('barcodeInput');
 const screen = document.getElementById('screen');
-const outPart = document.getElementById('outPart');
-const outLoc = document.getElementById('outLoc');
+const modelSelector = document.getElementById('dynamicModelSelector');
 const historyList = document.getElementById('historyList');
-const modelFilter = document.getElementById('modelFilter');
 
 let database = [];
+let models = new Set();
 
-// 1. CSV BETÖLTÉSE (Példa implementáció GitHub fájlokhoz)
-async function fetchCSV(filename, typeLabel) {
+// CSV BETÖLTÉS ÉS MODELL KIGYŰJTÉS
+// Feltételezzük: Cikkszám;Megnevezés;Helyszín;Modell
+async function initSystem() {
+await fetchCSV('bank.csv');
+await fetchCSV('ultetes.csv');
+updateModelDropdown();
+document.getElementById('dbStatus').innerText = `Adatbázis: ${database.length} tétel`;
+}
+
+async function fetchCSV(file) {
 try {
-const response = await fetch(filename);
-const text = await response.text();
-const rows = text.split('\n').slice(1); // Fejléc kihagyása
-rows.forEach(row => {
-const cols = row.split(';'); // Pontosvessző tagolás
-if (cols.length >= 2) {
+const res = await fetch(file);
+const data = await res.text();
+const lines = data.split('\n').slice(1);
+lines.forEach(line => {
+const parts = line.split(';');
+if (parts.length >= 2) {
+const modelName = parts[3] ? parts[3].trim() : "Egyéb";
 database.push({
-id: cols[0].trim(), // Cikkszám
-name: cols[1].trim(), // Megnevezés
-loc: cols[2] ? cols[2].trim() : "N/A", // Helyszín
-type: typeLabel
+id: parts[0].trim().toUpperCase(),
+name: parts[1].trim(),
+loc: parts[2] ? parts[2].trim() : "-",
+model: modelName
 });
+if (modelName) models.add(modelName);
 }
 });
-} catch (e) {
-console.error(filename + " betöltési hiba");
-document.getElementById('loadStatus').innerText = "Hiba!";
-document.getElementById('loadStatus').style.color = "red";
-}
+} catch (e) { console.error(file + " hiba"); }
 }
 
-// Indításkor betöltjük a fájlokat
-fetchCSV('bank.csv', 'bank');
-fetchCSV('ultetes.csv', 'ultetes');
+function updateModelDropdown() {
+Array.from(models).sort().forEach(m => {
+const opt = document.createElement('option');
+opt.value = m;
+opt.innerText = m;
+modelSelector.appendChild(opt);
+});
+}
 
-// 2. FÓKUSZ KEZELÉS (Javítva a lenyíló menühöz)
+// FÓKUSZ ÉS MENÜ FIX
 document.addEventListener('click', (e) => {
-if (e.target.id !== 'modelFilter') {
-input.focus();
-}
+if (e.target.id !== 'dynamicModelSelector') input.focus();
 });
+modelSelector.addEventListener('change', () => input.focus());
 
-modelFilter.addEventListener('click', (e) => {
-e.stopPropagation(); // Megakadályozza a document click eseményt
-});
-
-modelFilter.addEventListener('change', () => {
-input.focus();
-});
-
-// 3. KERESÉSI LOGIKA
-input.addEventListener('keypress', function (e) {
+// OLVASÁS
+input.addEventListener('keypress', (e) => {
 if (e.key === 'Enter') {
-const val = this.value.trim().toUpperCase();
-if (val) processScan(val);
-this.value = '';
+const val = input.value.trim().toUpperCase();
+if (val) handleScan(val);
+input.value = '';
 }
 });
 
-function processScan(scannedCode) {
-const filter = modelFilter.value;
+function handleScan(code) {
+const selectedModel = modelSelector.value;
 
-// Részleges egyezés: a beolvasott kód TARTALMAZZA-E a cikkszámot
-// Vagy a cikkszám TARTALMAZZA-E a beolvasott kódot (szituációtól függ)
 const found = database.find(item => {
-const match = scannedCode.includes(item.id.toUpperCase()) || item.id.toUpperCase().includes(scannedCode);
-const typeMatch = (filter === 'all' || item.type === filter);
-return match && typeMatch;
+const idMatch = code.includes(item.id) || item.id.includes(code);
+const modelMatch = (selectedModel === 'all' || item.model === selectedModel);
+return idMatch && modelMatch;
 });
 
 if (found) {
-updateUI(true, found.name, found.loc, scannedCode);
+triggerUI(true, found.name, found.loc, code, found.model);
 } else {
-updateUI(false, "NINCS TALÁLAT", "ISMERETLEN CIKKSZÁM", scannedCode);
+triggerUI(false, "NEM KELL", "ISMERETLEN", code, "");
 }
 }
 
-function updateUI(isOk, name, loc, code) {
-// Vizuális visszacsatolás
-screen.className = "main-panel " + (isOk ? "status-ok" : "status-error");
-outPart.innerText = name;
-outLoc.innerText = loc;
+function triggerUI(isOk, name, loc, code, model) {
+screen.className = "main-display " + (isOk ? "bg-ok" : "bg-err");
+document.getElementById('outPart').innerText = name;
+document.getElementById('outLoc').innerText = loc;
 
-// Hang
 const snd = document.getElementById(isOk ? 'sndOk' : 'sndError');
 snd.currentTime = 0;
-snd.play().catch(e => console.log("Hang lejátszási hiba"));
+snd.play().catch(()=>{});
 
-// Előzmény panel
-const time = new Date().toLocaleTimeString();
-const item = document.createElement('div');
-item.className = `history-item ${isOk ? 'hist-ok' : 'hist-err'}`;
-item.innerHTML = `<strong>${time}</strong> | ${code}<br>➔ ${name} (${loc})`;
-historyList.prepend(item);
+// Előzmény
+const div = document.createElement('div');
+div.className = `history-item ${isOk ? 'hist-ok' : 'hist-err'}`;
+div.innerHTML = `<strong>${code}</strong><br>${name} | ${model}<br><small>${new Date().toLocaleTimeString()}</small>`;
+historyList.prepend(div);
 
-// Képernyő villanás visszaállítása
-setTimeout(() => {
-screen.className = "main-panel";
-}, 1200);
+setTimeout(() => screen.className = "main-display", 1000);
 }
 
-function clearHistory() { historyList.innerHTML = ''; }
+initSystem();
 </script>
 </body>
 </html>
