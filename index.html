@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forvia Pro Scanner v3.0</title>
+<title>Forvia Pro Scanner v3.1</title>
 <style>
 :root {
 --ok-bg: #064e3b; --ok-border: #10b981;
@@ -11,43 +11,48 @@
 --bg: #020617; --panel: #1e293b; --accent: #3b82f6;
 }
 body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #f8fafc; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-.sidebar { width: 350px; background: var(--panel); border-right: 1px solid #334155; display: flex; flex-direction: column; padding: 20px; }
+.sidebar { width: 380px; background: var(--panel); border-right: 1px solid #334155; display: flex; flex-direction: column; padding: 20px; }
 .main-display { flex: 1; display: flex; flex-direction: column; transition: background 0.1s ease; }
 .search-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
 input { width: 90%; max-width: 850px; padding: 20px; font-size: 3.5rem; background: #000; border: 4px solid var(--accent); border-radius: 20px; color: var(--accent); text-align: center; outline: none; font-family: monospace; }
 .result-container { margin-top: 30px; text-align: center; width: 90%; }
-.res-main { font-size: 5rem; font-weight: 900; margin: 0; line-height: 1.1; }
-.res-sub { font-size: 2.5rem; color: #fbbf24; margin-top: 15px; font-weight: bold; }
-.res-details { font-size: 1.8rem; color: #94a3b8; margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.res-main { font-size: 5rem; font-weight: 900; margin: 0; line-height: 1.1; color: white; }
+.res-sub { font-size: 2.8rem; color: #fbbf24; margin-top: 15px; font-weight: bold; }
+.res-details { font-size: 1.8rem; color: #94a3b8; margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 15px; }
+.model-badge { font-size: 2rem; color: #3b82f6; font-weight: bold; margin-bottom: 10px; display: block; text-transform: uppercase; border: 1px solid #3b82f6; padding: 5px 15px; border-radius: 50px; display: inline-block; }
 .history-list { flex: 1; overflow-y: auto; margin-top: 15px; }
-.history-item { padding: 10px; margin-bottom: 8px; border-radius: 8px; background: rgba(0,0,0,0.3); border-left: 5px solid #475569; font-size: 0.85rem; }
+.history-item { padding: 12px; margin-bottom: 8px; border-radius: 8px; background: rgba(0,0,0,0.3); border-left: 5px solid #475569; font-size: 0.9rem; }
 .h-ok { border-left-color: var(--ok-border); }
 .h-err { border-left-color: var(--err-border); }
-select { width: 100%; padding: 15px; background: #0f172a; color: white; border: 2px solid var(--accent); border-radius: 10px; font-size: 1.1rem; margin-bottom: 20px; outline: none; }
+select { width: 100%; padding: 15px; background: #0f172a; color: white; border: 2px solid var(--accent); border-radius: 10px; font-size: 1.2rem; margin-bottom: 20px; outline: none; cursor: pointer; }
 .bg-ok { background-color: var(--ok-bg) !important; }
 .bg-err { background-color: var(--err-bg) !important; }
-.status-bar { padding: 10px 20px; font-size: 0.8rem; background: #000; color: #64748b; display: flex; justify-content: space-between; border-bottom: 1px solid #334155; }
+.status-bar { padding: 10px 20px; font-size: 0.85rem; background: #000; color: #64748b; display: flex; justify-content: space-between; border-bottom: 1px solid #334155; }
 </style>
 </head>
 <body>
 <div class="sidebar">
-<label style="color: #94a3b8; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;">Modell kiválasztása</label>
-<select id="modelSelector"><option value="all">MINDEN MODELL</option></select>
-<label style="color: #94a3b8; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;">Előzmények</label>
+<label style="color: #94a3b8; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; display: block;">Modell kiválasztása (Szűrő)</label>
+<select id="modelSelector"><option value="all">MINDEN MODELL MUTATÁSA</option></select>
+<label style="color: #94a3b8; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; margin-top: 10px; display: block;">Előzmények</label>
 <div id="historyList" class="history-list"></div>
-<button onclick="location.reload()" style="padding: 10px; background: #334155; color: white; border: none; border-radius: 5px; cursor: pointer;">Frissítés</button>
+<button onclick="location.reload()" style="padding: 12px; background: #334155; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; font-weight: bold;">ADATOK FRISSÍTÉSE</button>
 </div>
+
 <div class="main-display" id="screen">
-<div class="status-bar"><span>FORVIA INDUSTRIAL SCANNER v3.0</span><span id="loadMsg">Adatok betöltése...</span></div>
+<div class="status-bar"><span>FORVIA INDUSTRIAL SCANNER v3.1</span><span id="loadMsg">Adatok betöltése...</span></div>
 <div class="search-area">
 <input type="text" id="barcodeInput" placeholder="CSIPOGJON..." autofocus autocomplete="off">
-<div class="result-container">
-<div id="outPart" class="res-main">READY</div>
-<div id="outPos" class="res-sub">---</div>
+<div class="result-container" id="resContainer" style="display: none;">
+<div id="outModel" class="model-badge">MODEL</div>
+<div id="outPart" class="res-main">GÉP NÉV</div>
+<div id="outPos" class="res-sub">POZÍCIÓ</div>
 <div id="outDetails" class="res-details"></div>
 </div>
+<div id="readyMsg" style="font-size: 2rem; color: #475569;">Várakozás beolvasásra...</div>
 </div>
 </div>
+
 <audio id="sndOk" src="https://actions.google.com/sounds/v1/communication/notification_high_intensity.ogg"></audio>
 <audio id="sndError" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
@@ -56,52 +61,64 @@ const input = document.getElementById('barcodeInput');
 const screen = document.getElementById('screen');
 const modelSelector = document.getElementById('modelSelector');
 const historyList = document.getElementById('historyList');
-let bankDB = [];
-let ultetesDB = [];
+const resContainer = document.getElementById('resContainer');
+const readyMsg = document.getElementById('readyMsg');
+
+let fullDB = [];
 let modelSet = new Set();
 
 async function init() {
 await loadCSV('bank.csv', 'bank');
 await loadCSV('ultetes.csv', 'ultetes');
 populateModelSelector();
-document.getElementById('loadMsg').innerText = `Adatbázis: ${bankDB.length + ultetesDB.length} tétel`;
+document.getElementById('loadMsg').innerText = `Betöltve: ${fullDB.length} tétel`;
 }
 
-async function loadCSV(file, type) {
+async function loadCSV(file, source) {
 try {
 const res = await fetch(file);
 const data = await res.text();
 const lines = data.split('\n');
+if (lines.length < 2) return;
 const headers = lines[0].split(';');
 
 lines.slice(1).forEach(line => {
 const cols = line.split(';');
 if (cols.length < 2) return;
 
-// Modell kinyerése (Képek alapján mindkét fájlban a 'Model' oszlopban van)
-const modelIdx = headers.findIndex(h => h.trim().toLowerCase() === 'model');
-if (modelIdx !== -1 && cols[modelIdx]) modelSet.add(cols[modelIdx].trim());
+// Modell meghatározása oszlopnév alapján
+let modelIdx = headers.findIndex(h => h.trim().toLowerCase().includes('model'));
+let currentModel = (modelIdx !== -1 && cols[modelIdx]) ? cols[modelIdx].trim() : "ISMERETLEN";
+if(currentModel) modelSet.add(currentModel);
 
-if (type === 'bank') {
-bankDB.push({
-gep: cols[0]?.trim() || "",
-poz: cols[1]?.trim() || "",
+if (source === 'bank') {
+fullDB.push({
 id: cols[2]?.trim().toUpperCase() || "",
-model: cols[3]?.trim() || "",
-msd: cols[4]?.trim() || ""
+main: cols[0]?.trim() || "Nincs gép",
+sub: cols[1]?.trim() || "Nincs pozíció",
+msd: cols[4]?.trim() || "N/A",
+model: currentModel,
+origin: 'BANK'
 });
 } else {
-ultetesDB.push({
+fullDB.push({
 id: cols[0]?.trim().toUpperCase() || "",
-model: cols[4]?.trim() || "" // Ultetes.csv-nél az 5. oszlop a Model a kép alapján
+main: "ÜLTETÉSI EGYEZÉS",
+sub: "ELLENŐRZÖTT CIKKSZÁM",
+msd: "N/A",
+model: (cols[4] ? cols[4].trim() : currentModel),
+origin: 'ULTETES'
 });
+if(cols[4]) modelSet.add(cols[4].trim());
 }
 });
 } catch (e) { console.error(file + " hiba"); }
 }
 
 function populateModelSelector() {
-Array.from(modelSet).sort().forEach(m => {
+const sortedModels = Array.from(modelSet).sort();
+sortedModels.forEach(m => {
+if(!m) return;
 const opt = document.createElement('option');
 opt.value = m; opt.innerText = m;
 modelSelector.appendChild(opt);
@@ -122,31 +139,43 @@ input.value = '';
 function search(code) {
 const selectedModel = modelSelector.value;
 
-// Keresés mindkét táblában
-const inBank = bankDB.find(i => (code.includes(i.id) || i.id.includes(code)) && (selectedModel === 'all' || i.model === selectedModel));
-const inUltetes = ultetesDB.find(i => (code.includes(i.id) || i.id.includes(code)) && (selectedModel === 'all' || i.model === selectedModel));
+// Keresés: Cikkszám egyezés + Modell szűrő (ha van)
+const found = fullDB.find(i =>
+(code.includes(i.id) || i.id.includes(code)) &&
+(selectedModel === 'all' || i.model === selectedModel)
+);
 
-if (inBank) {
-showResult(true, inBank.gep, `POZÍCIÓ: ${inBank.poz}`, inBank.id, inBank.msd);
-} else if (inUltetes) {
-showResult(true, "ÜLTETÉS EGYEZÉS", "CSAK CIKKSZÁM OK", inUltetes.id, "N/A");
+readyMsg.style.display = 'none';
+resContainer.style.display = 'block';
+
+if (found) {
+showResult(true, found.main, found.sub, found.id, found.msd, found.model);
 } else {
-showResult(false, "NEM KELL / HIBA", "NINCS TALÁLAT", code, "");
+showResult(false, "NEM TALÁLHATÓ", "NINCS A LISTÁBAN", code, "N/A", "ISMERETLEN");
 }
 }
 
-function showResult(isOk, main, sub, id, msd) {
+function showResult(isOk, main, sub, id, msd, model) {
 screen.className = "main-display " + (isOk ? "bg-ok" : "bg-err");
+document.getElementById('outModel').innerText = model;
 document.getElementById('outPart').innerText = main;
-document.getElementById('outPos').innerText = sub;
-document.getElementById('outDetails').innerHTML = isOk ? `<div>CIKKSZÁM: ${id}</div><div>MSD: ${msd}</div>` : "";
+document.getElementById('outPos').innerText = isOk ? "POZÍCIÓ: " + sub : sub;
+document.getElementById('outDetails').innerHTML = `
+<div>CIKKSZÁM: <br><strong>${id}</strong></div>
+<div>MSD STÁTUSZ: <br><strong>${msd}</strong></div>
+`;
 
 const audio = document.getElementById(isOk ? 'sndOk' : 'sndError');
 audio.currentTime = 0; audio.play().catch(()=>{});
 
+// Előzmény mentése modell névvel
 const div = document.createElement('div');
 div.className = `history-item ${isOk ? 'h-ok' : 'h-err'}`;
-div.innerHTML = `<strong>${id}</strong><br>${main} - ${sub}<br><small>${new Date().toLocaleTimeString()}</small>`;
+div.innerHTML = `
+<span style="color:${isOk?'#10b981':'#ef4444'}">●</span>
+<strong>${model}</strong> | ${id}<br>
+<small>${main} - ${sub} (${new Date().toLocaleTimeString()})</small>
+`;
 historyList.prepend(div);
 }
 init();
