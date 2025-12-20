@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Industrial Control Hub v2.2</title>
+<title>Industrial Hub v2.3</title>
 <style>
 :root {
---ok-bg: #064e3b; --ok-glow: #10b981;
---err-bg: #450a0a; --err-glow: #ef4444;
+--ok-bg: #064e3b; --ok-border: #10b981;
+--err-bg: #450a0a; --err-border: #ef4444;
 --bg: #020617; --panel: #1e293b; --accent: #3b82f6;
 }
 
 body {
-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+font-family: 'Segoe UI', sans-serif;
 background: var(--bg);
 color: #f8fafc;
 margin: 0;
@@ -21,136 +21,112 @@ height: 100vh;
 overflow: hidden;
 }
 
-/* Bal oldali vezérlő sáv */
 .sidebar {
-width: 320px;
+width: 350px;
 background: var(--panel);
 border-right: 1px solid #334155;
 display: flex;
 flex-direction: column;
 padding: 20px;
-box-shadow: 5px 0 15px rgba(0,0,0,0.5);
 }
 
-/* Középső fő kijelző */
 .main-display {
 flex: 1;
 display: flex;
 flex-direction: column;
-position: relative;
-transition: background 0.2s ease;
+transition: background 0.1s ease;
 }
 
-.header-status {
-padding: 20px 40px;
-display: flex;
-justify-content: space-between;
-align-items: center;
-background: rgba(15, 23, 42, 0.8);
-border-bottom: 1px solid #334155;
-}
-
-/* Kereső egység */
-.search-center {
+.search-area {
 flex: 1;
 display: flex;
 flex-direction: column;
 align-items: center;
 justify-content: center;
-padding: 40px;
+padding: 20px;
 }
 
 input {
-width: 100%;
-max-width: 800px;
-padding: 30px;
+width: 90%;
+max-width: 850px;
+padding: 25px;
 font-size: 4rem;
 background: #000;
 border: 4px solid var(--accent);
-border-radius: 24px;
+border-radius: 20px;
 color: var(--accent);
 text-align: center;
 outline: none;
-font-family: 'Consolas', monospace;
-box-shadow: 0 0 40px rgba(59, 130, 246, 0.2);
+font-family: monospace;
 }
 
-/* Eredmény kártya */
-.result-card {
-margin-top: 50px;
+.result-container {
+margin-top: 40px;
 text-align: center;
-width: 100%;
 }
 
-.res-name { font-size: 6rem; font-weight: 900; margin: 0; line-height: 1; letter-spacing: -2px; }
-.res-loc { font-size: 3.5rem; color: #94a3b8; margin-top: 15px; font-weight: 300; }
+.res-name { font-size: 5.5rem; font-weight: 900; margin: 0; line-height: 1.1; }
+.res-loc { font-size: 3.5rem; color: #fbbf24; margin-top: 20px; font-weight: bold; }
 
-/* Szűrő stílus */
-.filter-group { margin-bottom: 30px; }
-label { display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; }
+.history-list {
+flex: 1;
+overflow-y: auto;
+margin-top: 15px;
+font-size: 0.85rem;
+}
+
+.history-item {
+padding: 10px;
+margin-bottom: 8px;
+border-radius: 8px;
+background: rgba(0,0,0,0.3);
+border-left: 5px solid #475569;
+}
+.h-ok { border-left-color: var(--ok-border); }
+.h-err { border-left-color: var(--err-border); }
 
 select {
 width: 100%;
 padding: 15px;
 background: #0f172a;
-color: #fff;
-border: 1px solid var(--accent);
-border-radius: 12px;
+color: white;
+border: 2px solid var(--accent);
+border-radius: 10px;
 font-size: 1.1rem;
-cursor: pointer;
+margin-bottom: 20px;
 }
 
-/* Előzmények */
-.history-list {
-flex: 1;
-overflow-y: auto;
-margin-top: 10px;
-scrollbar-width: thin;
-}
-
-.history-item {
-padding: 15px;
-margin-bottom: 10px;
-background: rgba(0,0,0,0.4);
-border-radius: 12px;
-border-left: 5px solid #334155;
-font-size: 0.9rem;
-}
-.hist-ok { border-left-color: var(--ok-glow); background: rgba(16, 185, 129, 0.05); }
-.hist-err { border-left-color: var(--err-glow); background: rgba(239, 68, 68, 0.05); }
-
-/* Állapot színek */
 .bg-ok { background-color: var(--ok-bg) !important; }
 .bg-err { background-color: var(--err-bg) !important; }
+
+.status-bar { padding: 10px 20px; font-size: 0.8rem; background: #000; color: #64748b; display: flex; justify-content: space-between; }
 </style>
 </head>
 <body>
 
 <div class="sidebar">
-<div class="filter-group">
-<label>Aktív Modell Szűrő</label>
-<select id="dynamicModelSelector">
+<label style="color: #94a3b8; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;">Modell kiválasztása</label>
+<select id="modelSelector">
 <option value="all">MINDEN MODELL</option>
 </select>
-</div>
 
-<label>Utolsó 50 Művelet</label>
+<label style="color: #94a3b8; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;">Előzmények</label>
 <div id="historyList" class="history-list"></div>
-<button onclick="location.reload()" style="margin-top:10px; padding:12px; background:#334155; color:white; border:none; border-radius:10px; cursor:pointer;">Frissítés</button>
+<button onclick="location.reload()" style="padding: 10px; background: #334155; color: white; border: none; border-radius: 5px; cursor: pointer;">Adatok frissítése</button>
 </div>
 
 <div class="main-display" id="screen">
-<div class="header-status">
-<div style="font-size: 1.2rem; font-weight: bold; color: var(--accent);">FORVIA | MASZK SCANNER</div>
-<div id="dbStatus" style="color: #4ade80;">Adatbázis: Betöltés...</div>
+<div class="status-bar">
+<span>FORVIA SYSTEM v2.3</span>
+<span id="loadMsg">Adatok betöltése...</span>
 </div>
 
-<div class="search-center">
-<input type="text" id="barcodeInput" placeholder="SCAN NOW" autofocus autocomplete="off">
+<div class="search-area">
+<input type="text" id="barcodeInput" placeholder="CSIPOGJON..." autofocus autocomplete="off">
 
-<div id="resultCard" class="result-card">
+<div class="result-container">
 <div id="outPart" class="res-name">READY</div>
-<div id="outLoc" class="res-loc">Csipogjon a kezdéshez</div>
+<div id="outLoc" class="res-loc">---</div>
 </div>
 </div>
 </div>
@@ -161,44 +137,55 @@ font-size: 0.9rem;
 <script>
 const input = document.getElementById('barcodeInput');
 const screen = document.getElementById('screen');
-const modelSelector = document.getElementById('dynamicModelSelector');
+const modelSelector = document.getElementById('modelSelector');
 const historyList = document.getElementById('historyList');
 
-let database = [];
-let models = new Set();
+let bankDB = [];
+let modelSet = new Set();
 
-// CSV BETÖLTÉS ÉS MODELL KIGYŰJTÉS
-// Feltételezzük: Cikkszám;Megnevezés;Helyszín;Modell
-async function initSystem() {
-await fetchCSV('bank.csv');
-await fetchCSV('ultetes.csv');
-updateModelDropdown();
-document.getElementById('dbStatus').innerText = `Adatbázis: ${database.length} tétel`;
+async function init() {
+// 1. Ültetési adatokból CSAK a modellek kigyűjtése
+await loadModelsOnly('ultetes.csv');
+// 2. Bank adatokból minden (Cikkszám, Név, Hely, Modell)
+await loadBankData('bank.csv');
+
+populateModelSelector();
+document.getElementById('loadMsg').innerText = `Adatbázis kész: ${bankDB.length} tétel`;
 }
 
-async function fetchCSV(file) {
+async function loadModelsOnly(file) {
 try {
 const res = await fetch(file);
 const data = await res.text();
-const lines = data.split('\n').slice(1);
-lines.forEach(line => {
-const parts = line.split(';');
-if (parts.length >= 2) {
-const modelName = parts[3] ? parts[3].trim() : "Egyéb";
-database.push({
-id: parts[0].trim().toUpperCase(),
-name: parts[1].trim(),
-loc: parts[2] ? parts[2].trim() : "-",
-model: modelName
+data.split('\n').slice(1).forEach(line => {
+const cols = line.split(';');
+if (cols[3]) modelSet.add(cols[3].trim()); // Modell oszlop
 });
-if (modelName) models.add(modelName);
-}
-});
-} catch (e) { console.error(file + " hiba"); }
+} catch (e) { console.error("Ültetés hiba"); }
 }
 
-function updateModelDropdown() {
-Array.from(models).sort().forEach(m => {
+async function loadBankData(file) {
+try {
+const res = await fetch(file);
+const data = await res.text();
+data.split('\n').slice(1).forEach(line => {
+const cols = line.split(';');
+if (cols.length >= 2) {
+const modelName = cols[3] ? cols[3].trim() : "";
+bankDB.push({
+id: cols[0].trim().toUpperCase(),
+name: cols[1].trim(),
+loc: cols[2] ? cols[2].trim() : "NINCS HELY",
+model: modelName
+});
+if (modelName) modelSet.add(modelName);
+}
+});
+} catch (e) { console.error("Bank hiba"); }
+}
+
+function populateModelSelector() {
+Array.from(modelSet).sort().forEach(m => {
 const opt = document.createElement('option');
 opt.value = m;
 opt.innerText = m;
@@ -206,56 +193,58 @@ modelSelector.appendChild(opt);
 });
 }
 
-// FÓKUSZ ÉS MENÜ FIX
-document.addEventListener('click', (e) => {
-if (e.target.id !== 'dynamicModelSelector') input.focus();
-});
+// Fókusz fix
+document.addEventListener('click', (e) => { if (e.target.id !== 'modelSelector') input.focus(); });
 modelSelector.addEventListener('change', () => input.focus());
 
-// OLVASÁS
 input.addEventListener('keypress', (e) => {
 if (e.key === 'Enter') {
-const val = input.value.trim().toUpperCase();
-if (val) handleScan(val);
+const code = input.value.trim().toUpperCase();
+if (code) search(code);
 input.value = '';
 }
 });
 
-function handleScan(code) {
+function search(code) {
 const selectedModel = modelSelector.value;
 
-const found = database.find(item => {
+// Keresés a BANK adatbázisban
+const found = bankDB.find(item => {
 const idMatch = code.includes(item.id) || item.id.includes(code);
 const modelMatch = (selectedModel === 'all' || item.model === selectedModel);
 return idMatch && modelMatch;
 });
 
 if (found) {
-triggerUI(true, found.name, found.loc, code, found.model);
+showResult(true, found.name, found.loc, code);
 } else {
-triggerUI(false, "NEM KELL", "ISMERETLEN", code, "");
+showResult(false, "NEM KELL / HIBA", "NINCS A BANKBAN", code);
 }
 }
 
-function triggerUI(isOk, name, loc, code, model) {
+function showResult(isOk, name, loc, code) {
+// Háttérszín beállítása
 screen.className = "main-display " + (isOk ? "bg-ok" : "bg-err");
+
+// Szövegek kiírása
 document.getElementById('outPart').innerText = name;
 document.getElementById('outLoc').innerText = loc;
 
-const snd = document.getElementById(isOk ? 'sndOk' : 'sndError');
-snd.currentTime = 0;
-snd.play().catch(()=>{});
+// Hang lejátszása
+const audio = document.getElementById(isOk ? 'sndOk' : 'sndError');
+audio.currentTime = 0;
+audio.play().catch(()=>{});
 
 // Előzmény
 const div = document.createElement('div');
-div.className = `history-item ${isOk ? 'hist-ok' : 'hist-err'}`;
-div.innerHTML = `<strong>${code}</strong><br>${name} | ${model}<br><small>${new Date().toLocaleTimeString()}</small>`;
+div.className = `history-item ${isOk ? 'h-ok' : 'h-err'}`;
+div.innerHTML = `<strong>${code}</strong><br>${name}<br><small>${new Date().toLocaleTimeString()}</small>`;
 historyList.prepend(div);
 
-setTimeout(() => screen.className = "main-display", 1000);
+// NEM állítjuk vissza a színt automatikusan, marad a következő csipogásig
 }
 
-initSystem();
+init();
 </script>
 </body>
 </html>
