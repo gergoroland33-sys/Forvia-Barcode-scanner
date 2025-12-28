@@ -3,64 +3,106 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forvia Multi-Model Scanner v3.2</title>
+<title>Forvia Bank Scanner Mobile v4.0</title>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
 <style>
 :root {
---ok-bg: #064e3b; --ok-border: #10b981;
---err-bg: #450a0a; --err-border: #ef4444;
---bg: #020617; --panel: #1e293b; --accent: #3b82f6;
+    --ok-bg: #064e3b; --ok-border: #10b981;
+    --err-bg: #450a0a; --err-border: #ef4444;
+    --bg: #020617; --panel: #1e293b; --accent: #3b82f6;
 }
-body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #f8fafc; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-.sidebar { width: 380px; background: var(--panel); border-right: 1px solid #334155; display: flex; flex-direction: column; padding: 20px; }
-.main-display { flex: 1; display: flex; flex-direction: column; transition: background 0.1s ease; }
+body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #f8fafc; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+/* Fő elrendezés: Mobilon oszlop, Asztali gépen sor */
+.container { display: flex; flex: 1; height: 100%; }
+@media (max-width: 768px) { .container { flex-direction: column-reverse; } }
+
+.sidebar { 
+    width: 300px; background: var(--panel); border-right: 1px solid #334155; 
+    display: flex; flex-direction: column; padding: 15px; 
+    overflow-y: auto;
+}
+@media (max-width: 768px) { 
+    .sidebar { width: 100%; height: 200px; border-right: none; border-top: 1px solid #334155; box-sizing: border-box; } 
+}
+
+.main-display { flex: 1; display: flex; flex-direction: column; transition: background 0.1s ease; position: relative; }
 .search-area { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
 
+/* Input mező */
+.input-group { width: 90%; max-width: 800px; display: flex; gap: 10px; margin-bottom: 20px; }
 input {
-width: 90%; max-width: 800px; padding: 20px; font-size: 3rem; background: #000;
-border: 4px solid var(--accent); border-radius: 20px; color: var(--accent);
-text-align: center; outline: none; font-family: monospace; margin-bottom: 30px;
+    flex: 1; padding: 15px; font-size: 1.5rem; background: #000;
+    border: 3px solid var(--accent); border-radius: 10px; color: var(--accent);
+    text-align: center; outline: none; font-family: monospace;
 }
 
-/* Találati kártyák konténere */
-#resultsWrapper { width: 95%; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+/* Kamera gomb */
+.cam-btn {
+    background: var(--accent); color: white; border: none; border-radius: 10px;
+    width: 60px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.cam-btn:active { transform: scale(0.95); }
+
+/* Kamera Modal */
+#reader { width: 100%; max-width: 500px; margin: 0 auto; display: none; border: 2px solid var(--accent); margin-bottom: 20px; }
+
+/* Találati kártyák */
+#resultsWrapper { width: 100%; display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
 
 .result-card {
-background: rgba(0,0,0,0.4); border: 2px solid var(--accent); border-radius: 20px;
-padding: 20px; width: 400px; text-align: center; animation: slideUp 0.3s ease;
+    background: rgba(0,0,0,0.6); border: 2px solid var(--accent); border-radius: 15px;
+    padding: 15px; width: 100%; max-width: 350px; text-align: center; animation: slideUp 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-.res-model { font-size: 1.8rem; font-weight: 800; color: var(--accent); text-transform: uppercase; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 15px; }
-.res-main { font-size: 3rem; font-weight: 900; line-height: 1; }
-.res-pos { font-size: 2rem; color: #fbbf24; margin-top: 10px; font-weight: bold; }
-.res-info { font-size: 1.2rem; color: #94a3b8; margin-top: 15px; display: flex; justify-content: space-around; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; }
+.res-model { font-size: 1.5rem; font-weight: 800; color: var(--accent); text-transform: uppercase; border-bottom: 1px solid #334155; padding-bottom: 5px; margin-bottom: 10px; }
+.res-main { font-size: 2.5rem; font-weight: 900; line-height: 1; margin-bottom: 5px; }
+.res-pos { font-size: 1.8rem; color: #fbbf24; font-weight: bold; }
+.res-info { font-size: 1rem; color: #94a3b8; margin-top: 10px; display: flex; justify-content: space-between; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 8px; }
 
-.history-list { flex: 1; overflow-y: auto; margin-top: 15px; }
-.history-item { padding: 12px; margin-bottom: 8px; border-radius: 8px; background: rgba(0,0,0,0.3); border-left: 5px solid #475569; font-size: 0.85rem; }
+/* Előzmények */
+.history-list { flex: 1; overflow-y: auto; margin-top: 10px; }
+.history-item { padding: 10px; margin-bottom: 6px; border-radius: 6px; background: rgba(0,0,0,0.3); border-left: 4px solid #475569; font-size: 0.8rem; display: flex; justify-content: space-between; }
 .h-ok { border-left-color: var(--ok-border); }
 .h-err { border-left-color: var(--err-border); }
 
-select { width: 100%; padding: 15px; background: #0f172a; color: white; border: 2px solid var(--accent); border-radius: 10px; font-size: 1.2rem; margin-bottom: 20px; outline: none; }
 .bg-ok { background-color: var(--ok-bg) !important; }
 .bg-err { background-color: var(--err-bg) !important; }
-.status-bar { padding: 10px 20px; font-size: 0.8rem; background: #000; color: #64748b; display: flex; justify-content: space-between; border-bottom: 1px solid #334155; }
+.status-bar { padding: 8px 15px; font-size: 0.8rem; background: #000; color: #64748b; display: flex; justify-content: space-between; border-bottom: 1px solid #334155; }
+
+/* Frissítés gomb */
+.refresh-btn { width: 100%; padding: 10px; background: #334155; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; }
 </style>
 </head>
 <body>
-<div class="sidebar">
-<label style="color: #94a3b8; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Modell Szűrő</label>
-<select id="modelSelector"><option value="all">MINDEN MODELL (ÖSSZESÍTETT)</option></select>
-<div id="historyList" class="history-list"></div>
-<button onclick="location.reload()" style="padding: 10px; background: #334155; color: white; border: none; border-radius: 5px; cursor: pointer;">Adatok Frissítése</button>
+
+<div class="status-bar">
+    <span>FORVIA BANK SCAN v4.0 (Mobil)</span>
+    <span id="loadMsg">Adatbázis töltése...</span>
 </div>
 
-<div class="main-display" id="screen">
-<div class="status-bar"><span>FORVIA MULTI-SCAN v3.2</span><span id="loadMsg">Betöltés...</span></div>
-<div class="search-area">
-<input type="text" id="barcodeInput" placeholder="BEOLVASÁS..." autofocus autocomplete="off">
-<div id="resultsWrapper">
-</div>
-</div>
+<div class="container">
+    <div class="sidebar">
+        <div style="color: #94a3b8; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; margin-bottom: 5px;">Előzmények</div>
+        <div id="historyList" class="history-list"></div>
+        <button class="refresh-btn" onclick="location.reload()">Adatok Frissítése</button>
+    </div>
+
+    <div class="main-display" id="screen">
+        <div class="search-area">
+            
+            <div id="reader"></div> <div class="input-group">
+                <input type="text" id="barcodeInput" placeholder="Kód írása vagy Scan..." autocomplete="off">
+                <button class="cam-btn" onclick="toggleCamera()" title="Kamera indítása">📷</button>
+            </div>
+
+            <div id="resultsWrapper">
+                </div>
+        </div>
+    </div>
 </div>
 
 <audio id="sndOk" src="https://actions.google.com/sounds/v1/communication/notification_high_intensity.ogg"></audio>
@@ -69,120 +111,155 @@ select { width: 100%; padding: 15px; background: #0f172a; color: white; border: 
 <script>
 const input = document.getElementById('barcodeInput');
 const screen = document.getElementById('screen');
-const modelSelector = document.getElementById('modelSelector');
 const resultsWrapper = document.getElementById('resultsWrapper');
 const historyList = document.getElementById('historyList');
+const loadMsg = document.getElementById('loadMsg');
+let html5QrcodeScanner = null;
+let isCameraRunning = false;
 
-let fullDB = [];
-let modelSet = new Set();
+let bankDB = [];
 
+// 1. Inicializálás: Csak a Bank CSV-t töltjük
 async function init() {
-await loadCSV('bank.csv', 'bank');
-await loadCSV('ultetes.csv', 'ultetes');
-populateModelSelector();
-document.getElementById('loadMsg').innerText = `Adatbázis: ${fullDB.length} tétel`;
+    await loadBankCSV();
+    loadMsg.innerText = `Bank DB: ${bankDB.length} tétel`;
 }
 
-async function loadCSV(file, source) {
-try {
-const res = await fetch(file);
-const data = await res.text();
-const lines = data.split('\n');
-const headers = lines[0].split(';');
+async function loadBankCSV() {
+    try {
+        const res = await fetch('bank.csv');
+        const data = await res.text();
+        const lines = data.split('\n');
+        const headers = lines[0].split(';');
 
-lines.slice(1).forEach(line => {
-const cols = line.split(';');
-if (cols.length < 2) return;
+        // Megkeressük a 'model' oszlopot dinamikusan, ha van
+        let modelIdx = headers.findIndex(h => h.trim().toLowerCase().includes('model'));
 
-let modelIdx = headers.findIndex(h => h.trim().toLowerCase().includes('model'));
-let currentModel = (modelIdx !== -1 && cols[modelIdx]) ? cols[modelIdx].trim() : "ISMERETLEN";
-if(currentModel) modelSet.add(currentModel);
+        lines.slice(1).forEach(line => {
+            const cols = line.split(';');
+            if (cols.length < 2) return;
 
-if (source === 'bank') {
-fullDB.push({
-id: cols[2]?.trim().toUpperCase() || "",
-gep: cols[0]?.trim() || "N/A",
-poz: cols[1]?.trim() || "N/A",
-msd: cols[4]?.trim() || "N/A",
-model: currentModel
-});
-} else {
-fullDB.push({
-id: cols[0]?.trim().toUpperCase() || "",
-gep: "ÜLTETÉS",
-poz: "OK",
-msd: "N/A",
-model: (cols[4] ? cols[4].trim() : currentModel)
-});
-}
-});
-} catch (e) { console.error(file + " hiba"); }
+            bankDB.push({
+                gep: cols[0]?.trim() || "N/A",
+                poz: cols[1]?.trim() || "N/A",
+                id: cols[2]?.trim().toUpperCase() || "",
+                msd: cols[4]?.trim() || "N/A",
+                model: (modelIdx !== -1 && cols[modelIdx]) ? cols[modelIdx].trim() : "BANK"
+            });
+        });
+    } catch (e) { 
+        console.error("Hiba a bank.csv betöltésekor", e); 
+        loadMsg.innerText = "HIBA: bank.csv nem található!";
+        loadMsg.style.color = "red";
+    }
 }
 
-function populateModelSelector() {
-Array.from(modelSet).sort().forEach(m => {
-if(!m) return;
-const opt = document.createElement('option');
-opt.value = m; opt.innerText = m;
-modelSelector.appendChild(opt);
-});
-}
-
+// 2. Keresés logika (Szűrők nélkül, csak string egyezés)
 input.addEventListener('keypress', (e) => {
-if (e.key === 'Enter') {
-const code = input.value.trim().toUpperCase();
-if (code) search(code);
-input.value = '';
-}
+    if (e.key === 'Enter') {
+        const code = input.value.trim().toUpperCase();
+        if (code) search(code);
+        input.value = '';
+        input.blur(); // Mobilon bezárja a billentyűzetet
+    }
 });
 
 function search(code) {
-const selectedModel = modelSelector.value;
-resultsWrapper.innerHTML = ''; // Régi találatok törlése
+    resultsWrapper.innerHTML = '';
+    
+    // Keresés: ID tartalmazza a beírt kódot VAGY a beírt kód tartalmazza az ID-t
+    const matches = bankDB.filter(i => (code.includes(i.id) || i.id.includes(code)) && i.id.length > 2);
 
-// ÖSSZES találat kigyűjtése a cikkszám alapján
-const matches = fullDB.filter(i =>
-(code.includes(i.id) || i.id.includes(code)) &&
-(selectedModel === 'all' || i.model === selectedModel)
-);
+    if (matches.length > 0) {
+        screen.className = "main-display bg-ok";
+        playSound(true);
 
-if (matches.length > 0) {
-screen.className = "main-display bg-ok";
-playSound(true);
-
-matches.forEach(m => {
-const card = document.createElement('div');
-card.className = 'result-card';
-card.innerHTML = `
-<div class="res-model">${m.model}</div>
-<div class="res-main">${m.gep}</div>
-<div class="res-pos">POZ: ${m.poz}</div>
-<div class="res-info">
-<span>MSD: <b>${m.msd}</b></span>
-<span>ID: <b>${m.id.slice(-5)}</b></span>
-</div>
-`;
-resultsWrapper.appendChild(card);
-});
-addToHistory(code, `${matches.length} modellnél találat`, true);
-} else {
-screen.className = "main-display bg-err";
-playSound(false);
-resultsWrapper.innerHTML = '<div style="font-size:3rem; font-weight:bold;">NINCS TALÁLAT</div>';
-addToHistory(code, "Nincs a listában", false);
-}
+        matches.forEach(m => {
+            const card = document.createElement('div');
+            card.className = 'result-card';
+            // Megtartottuk a jól működő elrendezést
+            card.innerHTML = `
+                <div class="res-model">${m.model}</div>
+                <div class="res-main">${m.gep}</div>
+                <div class="res-pos">POZ: ${m.poz}</div>
+                <div class="res-info">
+                    <span>MSD: <b>${m.msd}</b></span>
+                    <span>ID: ${m.id.slice(-5)}</span>
+                </div>
+            `;
+            resultsWrapper.appendChild(card);
+        });
+        addToHistory(code, `Találat: ${matches.length} db`, true);
+    } else {
+        screen.className = "main-display bg-err";
+        playSound(false);
+        resultsWrapper.innerHTML = '<div style="font-size:2rem; font-weight:bold; margin-top:20px;">NINCS A BANKBAN</div>';
+        addToHistory(code, "Nincs találat", false);
+    }
 }
 
+// 3. Kamera logika (html5-qrcode)
+function toggleCamera() {
+    if (isCameraRunning) {
+        stopCamera();
+    } else {
+        startCamera();
+    }
+}
+
+function startCamera() {
+    const readerDiv = document.getElementById('reader');
+    readerDiv.style.display = 'block';
+    
+    html5QrcodeScanner = new Html5Qrcode("reader");
+    const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+    
+    html5QrcodeScanner.start(
+        { facingMode: "environment" }, // Hátsó kamera preferálása
+        config,
+        (decodedText) => {
+            // SIKERES OLVASÁS
+            stopCamera();
+            input.value = decodedText;
+            search(decodedText.trim().toUpperCase());
+        },
+        (errorMessage) => {
+            // Olvasási hiba (figyelmen kívül hagyjuk, mert folyamatosan scannel)
+        }
+    ).then(() => {
+        isCameraRunning = true;
+        document.querySelector('.cam-btn').innerText = "❌";
+        document.querySelector('.cam-btn').style.background = "#ef4444";
+    }).catch(err => {
+        alert("Kamera hiba (HTTPS szükséges?): " + err);
+    });
+}
+
+function stopCamera() {
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.stop().then(() => {
+            html5QrcodeScanner.clear();
+            document.getElementById('reader').style.display = 'none';
+            isCameraRunning = false;
+            document.querySelector('.cam-btn').innerText = "📷";
+            document.querySelector('.cam-btn').style.background = "var(--accent)";
+        });
+    }
+}
+
+// 4. Egyéb segédfunkciók
 function playSound(ok) {
-const snd = document.getElementById(ok ? 'sndOk' : 'sndError');
-snd.currentTime = 0; snd.play().catch(()=>{});
+    const snd = document.getElementById(ok ? 'sndOk' : 'sndError');
+    snd.currentTime = 0; snd.play().catch(()=>{});
 }
 
 function addToHistory(code, text, ok) {
-const div = document.createElement('div');
-div.className = `history-item ${ok ? 'h-ok' : 'h-err'}`;
-div.innerHTML = `<strong>${code}</strong> - ${text}<br><small>${new Date().toLocaleTimeString()}</small>`;
-historyList.prepend(div);
+    const div = document.createElement('div');
+    div.className = `history-item ${ok ? 'h-ok' : 'h-err'}`;
+    // Rövid időkód
+    const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+    div.innerHTML = `<div><strong>${code}</strong></div><div style="text-align:right">${text} <small>(${time})</small></div>`;
+    historyList.prepend(div);
 }
 
 init();
