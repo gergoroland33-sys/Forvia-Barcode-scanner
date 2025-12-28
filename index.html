@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Forvia Bank Scan Mobil Ver4.2</title>
+<title>Forvia Bank Scan Mobil Ver4.3</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
-/* --- PRO DESIGN VÁLTOZÓK (Változatlan) --- */
+/* --- PRO DESIGN VÁLTOZÓK --- */
 :root {
     --bg-dark: #0f172a;
     --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -189,7 +189,7 @@ input[type=text]::placeholder {
 <body>
 
 <div class="header">
-    <h1>Forvia Bank Scan Mobil Ver4.2</h1>
+    <h1>Forvia Bank Scan Mobil Ver4.3</h1>
     <div class="credits">Készítette: <span>Gergő Roland</span></div>
 </div>
 
@@ -306,7 +306,7 @@ function search(code) {
     }
 }
 
-// --- KAMERA LOGIKA OPTIMALIZÁLVA KIS KÓDOKRA ---
+// --- KAMERA LOGIKA ---
 
 function toggleCamera() {
     if (isCameraRunning) stopCamera();
@@ -322,12 +322,11 @@ function startCamera() {
 
     html5QrcodeScanner = new Html5Qrcode("reader");
     
-    // FIX MÉRET: 200x200 pixel. 
-    // Ez kicsinek tűnhet, de ez kényszeríti rá a felhasználót (téged), 
-    // hogy közel vidd a telefont, így a 6mm-es kód kitölti a képet és éles lesz.
+    // FIX KOCKA MÉRET (250x250 pixel)
+    // Ez biztosítja a négyzet alakot, ami segít a célzásban.
     const config = { 
-        fps: 15, // Gyorsabb képkocka
-        qrbox: { width: 200, height: 200 }, 
+        fps: 15,
+        qrbox: { width: 250, height: 250 }, 
         aspectRatio: 1.0 
     };
     
@@ -335,10 +334,10 @@ function startCamera() {
         { facingMode: "environment" }, 
         config,
         (decodedText) => {
-            // SIKER ESETÉN:
+            // SIKERES OLVASÁS
             stopCamera(); // Kamera leáll
-            input.value = decodedText;
-            search(decodedText.trim().toUpperCase());
+            input.value = decodedText; // Kód beírása
+            search(decodedText.trim().toUpperCase()); // Keresés indítása
         },
         () => {}
     ).then(() => {
@@ -355,7 +354,7 @@ function stopCamera() {
             html5QrcodeScanner.clear();
             document.getElementById('reader').style.display = 'none';
             isCameraRunning = false;
-            // Ikonok visszaállítása azonnal
+            // Gomb visszaállítása "Kamera" ikonra, hogy újra nyomható legyen
             camIcon.style.display = 'block';
             stopIcon.style.display = 'none';
             scanBtn.classList.remove('active');
