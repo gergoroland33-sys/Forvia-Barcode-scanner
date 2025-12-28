@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Forvia Bank Scan Mobil Ver4</title>
+<title>Forvia Bank Scan Mobil Ver4.1</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
-/* --- PRO DESIGN VÁLTOZÓK --- */
+/* --- PRO DESIGN VÁLTOZÓK (Változatlan) --- */
 :root {
     --bg-dark: #0f172a;
     --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    --accent: #3b82f6; /* Kék */
+    --accent: #3b82f6;
     --accent-glow: rgba(59, 130, 246, 0.5);
     --glass: rgba(255, 255, 255, 0.05);
     --glass-border: rgba(255, 255, 255, 0.1);
@@ -40,7 +40,7 @@ body {
     padding: 15px 20px;
     text-align: center;
     z-index: 10;
-    padding-top: max(15px, env(safe-area-inset-top)); /* iOS Notch kezelés */
+    padding-top: max(15px, env(safe-area-inset-top));
 }
 .header h1 {
     margin: 0;
@@ -68,21 +68,50 @@ body {
     align-items: center;
 }
 
-/* --- KAMERA DOBOZ --- */
+/* --- KAMERA KONTÉNER --- */
 #reader {
     width: 100%;
-    max-width: 400px;
+    max-width: 500px;
     border-radius: 20px;
     overflow: hidden;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     border: 2px solid var(--accent);
-    display: none; /* Alapból rejtve */
+    display: none;
+    background: black;
 }
-/* Kamera videó stílus */
-#reader video {
-    object-fit: cover;
+#reader video { object-fit: cover; border-radius: 20px; }
+
+/* --- MÉRET SLIDER (ÚJ) --- */
+.range-container {
+    width: 100%;
+    max-width: 300px;
+    display: none; /* Csak kamera közben látszik */
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    background: rgba(0,0,0,0.3);
+    padding: 5px 15px;
     border-radius: 20px;
+}
+.range-label { font-size: 0.8rem; color: var(--accent); white-space: nowrap; }
+input[type=range] {
+    width: 100%;
+    -webkit-appearance: none;
+    background: transparent;
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 16px; width: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-top: -6px;
+    box-shadow: 0 0 10px var(--accent);
+}
+input[type=range]::-webkit-slider-runnable-track {
+    width: 100%; height: 4px;
+    background: #475569;
+    border-radius: 2px;
 }
 
 /* --- INPUT MEZŐ ÉS GOMB --- */
@@ -95,7 +124,7 @@ body {
     margin-bottom: 25px;
 }
 
-input {
+input[type=text] {
     flex: 1;
     background: var(--glass);
     border: 1px solid var(--glass-border);
@@ -110,21 +139,20 @@ input {
     backdrop-filter: blur(5px);
     box-shadow: 0 4px 6px rgba(0,0,0,0.2);
 }
-input:focus {
+input[type=text]:focus {
     border-color: var(--accent);
     box-shadow: 0 0 20px var(--accent-glow);
 }
-input::placeholder {
+input[type=text]::placeholder {
     color: rgba(255,255,255,0.3);
     font-weight: 400;
     text-transform: uppercase;
     font-size: 1rem;
 }
 
-/* SCAN GOMB (SVG IKONNAL) */
 .scan-btn {
     width: 60px;
-    height: 60px; /* Négyzetesebb, modernebb */
+    height: 60px;
     border-radius: 16px;
     border: none;
     background: var(--accent);
@@ -145,7 +173,7 @@ input::placeholder {
 #resultsWrapper { width: 100%; max-width: 500px; }
 
 .result-card {
-    background: rgba(16, 185, 129, 0.15); /* Halvány zöld alap */
+    background: rgba(16, 185, 129, 0.15);
     border: 1px solid var(--ok-color);
     border-radius: 20px;
     padding: 25px;
@@ -155,10 +183,9 @@ input::placeholder {
     backdrop-filter: blur(10px);
 }
 .result-card.error {
-    background: rgba(239, 68, 68, 0.15); /* Halvány piros alap */
+    background: rgba(239, 68, 68, 0.15);
     border-color: var(--err-color);
 }
-
 @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
 .res-model { font-size: 1rem; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
@@ -167,12 +194,10 @@ input::placeholder {
 .res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .res-item { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px; font-size: 0.9rem; color: var(--text-muted); }
 .res-item b { display: block; color: white; font-size: 1.1rem; margin-top: 3px; }
-
-/* --- ÜZENETEK --- */
 .no-result { font-size: 1.5rem; font-weight: bold; color: var(--err-color); text-align: center; margin-top: 20px; }
 .load-msg { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; }
 
-/* --- ELŐZMÉNYEK SÁV (Footer) --- */
+/* --- FOOTER --- */
 .footer-history {
     background: rgba(15, 23, 42, 0.95);
     border-top: 1px solid var(--glass-border);
@@ -205,6 +230,11 @@ input::placeholder {
 
     <div id="reader"></div>
 
+    <div class="range-container" id="rangeContainer">
+        <span class="range-label">Méret:</span>
+        <input type="range" id="boxSizeSlider" min="150" max="400" value="280">
+    </div>
+
     <div class="input-wrapper">
         <input type="text" id="barcodeInput" placeholder="Scan Barcode" autocomplete="off">
         
@@ -219,8 +249,7 @@ input::placeholder {
         </button>
     </div>
 
-    <div id="resultsWrapper">
-        </div>
+    <div id="resultsWrapper"></div>
 </div>
 
 <div class="footer-history">
@@ -232,9 +261,6 @@ input::placeholder {
 <audio id="sndError" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
-/* =========================================
-   LOGIKA (NEM VÁLTOZOTT, CSAK A DESIGN)
-   ========================================= */
 const input = document.getElementById('barcodeInput');
 const resultsWrapper = document.getElementById('resultsWrapper');
 const historyList = document.getElementById('historyList');
@@ -242,10 +268,13 @@ const loadMsg = document.getElementById('loadMsg');
 const camIcon = document.getElementById('camIcon');
 const stopIcon = document.getElementById('stopIcon');
 const scanBtn = document.querySelector('.scan-btn');
+const rangeContainer = document.getElementById('rangeContainer');
+const boxSizeSlider = document.getElementById('boxSizeSlider');
 
 let html5QrcodeScanner = null;
 let isCameraRunning = false;
 let bankDB = [];
+let currentBoxSize = 0; // Dinamikusan számoljuk
 
 async function init() {
     await loadBankCSV();
@@ -253,6 +282,10 @@ async function init() {
         loadMsg.innerText = `Adatbázis kész: ${bankDB.length} tétel`;
         loadMsg.style.color = "#10b981";
     }
+    // Alapértelmezett méret beállítása a képernyő szélesség alapján
+    const screenW = window.innerWidth;
+    currentBoxSize = Math.min(Math.floor(screenW * 0.8), 350); 
+    boxSizeSlider.value = currentBoxSize;
 }
 
 async function loadBankCSV() {
@@ -317,10 +350,21 @@ function search(code) {
     }
 }
 
+// --- KAMERA LOGIKA FRISSÍTVE ---
+
 function toggleCamera() {
     if (isCameraRunning) stopCamera();
     else startCamera();
 }
+
+// Slider esemény figyelése: ha változik, újraindítja a kamerát az új mérettel
+boxSizeSlider.addEventListener('change', () => {
+    if (isCameraRunning) {
+        currentBoxSize = parseInt(boxSizeSlider.value);
+        stopCamera();
+        setTimeout(() => startCamera(), 300); // Kis késleltetés a simább váltásért
+    }
+});
 
 function startCamera() {
     const readerDiv = document.getElementById('reader');
@@ -328,10 +372,19 @@ function startCamera() {
     camIcon.style.display = 'none';
     stopIcon.style.display = 'block';
     scanBtn.classList.add('active');
+    rangeContainer.style.display = 'flex'; // Slider megjelenítése
 
     html5QrcodeScanner = new Html5Qrcode("reader");
-    // Mobilon jobb felbontás és képarány
-    const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+    
+    // Doboz méret használata a sliderből vagy az initből
+    const boxW = parseInt(boxSizeSlider.value);
+    const boxH = Math.floor(boxW * 0.6); // Téglalap arány a vonalkódokhoz (szélesebb)
+
+    const config = { 
+        fps: 10, 
+        qrbox: { width: boxW, height: boxH }, 
+        aspectRatio: 1.0 
+    };
     
     html5QrcodeScanner.start(
         { facingMode: "environment" }, 
@@ -355,6 +408,7 @@ function stopCamera() {
         html5QrcodeScanner.stop().then(() => {
             html5QrcodeScanner.clear();
             document.getElementById('reader').style.display = 'none';
+            rangeContainer.style.display = 'none'; // Slider elrejtése
             isCameraRunning = false;
             camIcon.style.display = 'block';
             stopIcon.style.display = 'none';
