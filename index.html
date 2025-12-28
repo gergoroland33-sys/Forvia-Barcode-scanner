@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Forvia Bank Scan Mobil Ver4.5</title>
+<title>Forvia Bank Scan Mobil Ver4.6</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
@@ -38,10 +38,10 @@ body {
 
 .main-content { flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; align-items: center; }
 
-/* KOCKA ALAKÚ KAMERA (Változatlan) */
+/* KOCKA ALAKÚ KAMERA */
 #reader {
     width: 100%; max-width: 300px;
-    aspect-ratio: 1 / 1; /* Kocka alak */
+    aspect-ratio: 1 / 1; 
     border-radius: 20px; overflow: hidden; margin-bottom: 20px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     border: 3px solid var(--accent);
@@ -84,7 +84,7 @@ input[type=text] {
 .res-pos { font-size: 1.5rem; color: #fbbf24; font-weight: bold; margin-bottom: 20px; }
 .res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .res-item { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px; font-size: 0.9rem; color: var(--text-muted); }
-.res-item b { display: block; color: white; font-size: 1.1rem; margin-top: 3px; }
+.res-item b { display: block; color: white; font-size: 1.1rem; margin-top: 3px; word-break: break-all; } /* Hosszú ID tördelés */
 .no-result { font-size: 1.5rem; font-weight: bold; color: var(--err-color); text-align: center; margin-top: 20px; }
 .load-msg { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; }
 
@@ -107,7 +107,7 @@ input[type=text] {
 <body>
 
 <div class="header">
-    <h1>Forvia Bank Scan Mobil Ver4.5</h1>
+    <h1>Forvia Bank Scan Mobil Ver4.6</h1>
     <div class="credits">Készítette: <span>Gergő Roland</span></div>
 </div>
 
@@ -206,13 +206,14 @@ function search(code) {
         matches.forEach(m => {
             const card = document.createElement('div');
             card.className = 'result-card';
+            // ITT VOLT A VÁLTOZTATÁS: m.id.slice(-5) helyett simán m.id
             card.innerHTML = `
                 <div class="res-model">${m.model}</div>
                 <div class="res-main">${m.gep}</div>
                 <div class="res-pos">POZ: ${m.poz}</div>
                 <div class="res-grid">
                     <div class="res-item">MSD <b>${m.msd}</b></div>
-                    <div class="res-item">ID <b>${m.id.slice(-5)}</b></div>
+                    <div class="res-item">ID <b>${m.id}</b></div>
                 </div>
             `;
             resultsWrapper.appendChild(card);
@@ -225,20 +226,18 @@ function search(code) {
     }
 }
 
-// --- JAVÍTOTT KAMERA VEZÉRLÉS ---
+// --- KAMERA VEZÉRLÉS ---
 
 function handleCameraButton() {
-    // 1. Lépés: Mindig töröljük az előző adatokat és a mezőt, ha nyitunk, ha zárunk
     resultsWrapper.innerHTML = ''; 
     input.value = '';
 
     if (isCameraRunning) {
         forceStopCamera();
     } else {
-        // 2. Lépés: Késleltetett indítás, hogy a rendszer biztosan tiszta legyen
         setTimeout(() => {
             startCamera();
-        }, 200); // 200ms szünet a biztonság kedvéért
+        }, 200); 
     }
 }
 
@@ -248,33 +247,31 @@ function startCamera() {
     stopIcon.style.display = 'block';
     scanBtn.classList.add('active');
 
-    // Új példány létrehozása (mindig tisztán indul)
     if (html5QrCode === null) {
         html5QrCode = new Html5Qrcode("reader");
     }
 
     const config = { 
-        fps: 20, // Magasabb FPS a gyorsabb olvasásért
-        qrbox: { width: 200, height: 200 } // Fix 200-as kocka
+        fps: 20, 
+        qrbox: { width: 200, height: 200 } 
     };
     
     html5QrCode.start(
         { facingMode: "environment" }, 
         config,
         (decodedText) => {
-            // SIKER: Azonnal állj, majd keress
             forceStopCamera().then(() => {
                 input.value = decodedText;
                 search(decodedText.trim().toUpperCase());
             });
         },
-        () => {} // Hiba elnyomása
+        () => {}
     ).then(() => {
         isCameraRunning = true;
     }).catch(err => {
         console.error("Kamera start hiba:", err);
-        forceStopCamera(); // Ha hiba van, azonnal alaphelyzet
-        alert("Nem sikerült megnyitni a kamerát. Frissítsd az oldalt!");
+        forceStopCamera();
+        alert("Kamera hiba! Frissítsd az oldalt.");
     });
 }
 
@@ -286,8 +283,6 @@ function forceStopCamera() {
                 cleanupUI();
                 resolve();
             }).catch(err => {
-                // Ha a stop hibára fut (pl. már leállt), akkor is takarítunk
-                console.log("Stop hiba (nem gond):", err);
                 cleanupUI();
                 resolve();
             });
@@ -299,7 +294,6 @@ function forceStopCamera() {
 }
 
 function cleanupUI() {
-    // Teljes takarítás
     html5QrCode = null;
     isCameraRunning = false;
     readerDiv.style.display = 'none';
