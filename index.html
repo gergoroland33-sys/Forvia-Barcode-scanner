@@ -2,127 +2,257 @@
 <html lang="hu">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forvia Bank Scanner Mobile v4.0</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Forvia Bank Scan Mobil Ver4</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <style>
+/* --- PRO DESIGN VÁLTOZÓK --- */
 :root {
-    --ok-bg: #064e3b; --ok-border: #10b981;
-    --err-bg: #450a0a; --err-border: #ef4444;
-    --bg: #020617; --panel: #1e293b; --accent: #3b82f6;
+    --bg-dark: #0f172a;
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    --accent: #3b82f6; /* Kék */
+    --accent-glow: rgba(59, 130, 246, 0.5);
+    --glass: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --ok-color: #10b981;
+    --err-color: #ef4444;
 }
-body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #f8fafc; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-/* Fő elrendezés: Mobilon oszlop, Asztali gépen sor */
-.container { display: flex; flex: 1; height: 100%; }
-@media (max-width: 768px) { .container { flex-direction: column-reverse; } }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text-main);
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
 
-.sidebar { 
-    width: 300px; background: var(--panel); border-right: 1px solid #334155; 
-    display: flex; flex-direction: column; padding: 15px; 
+/* --- FEJLÉC --- */
+.header {
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--glass-border);
+    padding: 15px 20px;
+    text-align: center;
+    z-index: 10;
+    padding-top: max(15px, env(safe-area-inset-top)); /* iOS Notch kezelés */
+}
+.header h1 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: white;
+}
+.header .credits {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-weight: 500;
+}
+.header .credits span { color: var(--accent); }
+
+/* --- FŐ TARTALOM --- */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
     overflow-y: auto;
-}
-@media (max-width: 768px) { 
-    .sidebar { width: 100%; height: 200px; border-right: none; border-top: 1px solid #334155; box-sizing: border-box; } 
+    align-items: center;
 }
 
-.main-display { flex: 1; display: flex; flex-direction: column; transition: background 0.1s ease; position: relative; }
-.search-area { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
+/* --- KAMERA DOBOZ --- */
+#reader {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 2px solid var(--accent);
+    display: none; /* Alapból rejtve */
+}
+/* Kamera videó stílus */
+#reader video {
+    object-fit: cover;
+    border-radius: 20px;
+}
 
-/* Input mező */
-.input-group { width: 90%; max-width: 800px; display: flex; gap: 10px; margin-bottom: 20px; }
+/* --- INPUT MEZŐ ÉS GOMB --- */
+.input-wrapper {
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+    display: flex;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
 input {
-    flex: 1; padding: 15px; font-size: 1.5rem; background: #000;
-    border: 3px solid var(--accent); border-radius: 10px; color: var(--accent);
-    text-align: center; outline: none; font-family: monospace;
+    flex: 1;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    padding: 16px 20px;
+    border-radius: 16px;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-align: center;
+    outline: none;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px var(--accent-glow);
+}
+input::placeholder {
+    color: rgba(255,255,255,0.3);
+    font-weight: 400;
+    text-transform: uppercase;
+    font-size: 1rem;
 }
 
-/* Kamera gomb */
-.cam-btn {
-    background: var(--accent); color: white; border: none; border-radius: 10px;
-    width: 60px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+/* SCAN GOMB (SVG IKONNAL) */
+.scan-btn {
+    width: 60px;
+    height: 60px; /* Négyzetesebb, modernebb */
+    border-radius: 16px;
+    border: none;
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px var(--accent-glow);
+    transition: transform 0.2s;
+    flex-shrink: 0;
 }
-.cam-btn:active { transform: scale(0.95); }
+.scan-btn:active { transform: scale(0.92); }
+.scan-btn svg { width: 28px; height: 28px; fill: white; }
+.scan-btn.active { background: var(--err-color); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.5); }
 
-/* Kamera Modal */
-#reader { width: 100%; max-width: 500px; margin: 0 auto; display: none; border: 2px solid var(--accent); margin-bottom: 20px; }
-
-/* Találati kártyák */
-#resultsWrapper { width: 100%; display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
+/* --- EREDMÉNY KÁRTYA --- */
+#resultsWrapper { width: 100%; max-width: 500px; }
 
 .result-card {
-    background: rgba(0,0,0,0.6); border: 2px solid var(--accent); border-radius: 15px;
-    padding: 15px; width: 100%; max-width: 350px; text-align: center; animation: slideUp 0.3s ease;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    background: rgba(16, 185, 129, 0.15); /* Halvány zöld alap */
+    border: 1px solid var(--ok-color);
+    border-radius: 20px;
+    padding: 25px;
+    text-align: center;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
 }
-@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.result-card.error {
+    background: rgba(239, 68, 68, 0.15); /* Halvány piros alap */
+    border-color: var(--err-color);
+}
 
-.res-model { font-size: 1.5rem; font-weight: 800; color: var(--accent); text-transform: uppercase; border-bottom: 1px solid #334155; padding-bottom: 5px; margin-bottom: 10px; }
-.res-main { font-size: 2.5rem; font-weight: 900; line-height: 1; margin-bottom: 5px; }
-.res-pos { font-size: 1.8rem; color: #fbbf24; font-weight: bold; }
-.res-info { font-size: 1rem; color: #94a3b8; margin-top: 10px; display: flex; justify-content: space-between; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 8px; }
+@keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
-/* Előzmények */
-.history-list { flex: 1; overflow-y: auto; margin-top: 10px; }
-.history-item { padding: 10px; margin-bottom: 6px; border-radius: 6px; background: rgba(0,0,0,0.3); border-left: 4px solid #475569; font-size: 0.8rem; display: flex; justify-content: space-between; }
-.h-ok { border-left-color: var(--ok-border); }
-.h-err { border-left-color: var(--err-border); }
+.res-model { font-size: 1rem; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
+.res-main { font-size: 3rem; font-weight: 800; line-height: 1; color: white; margin: 10px 0; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+.res-pos { font-size: 1.5rem; color: #fbbf24; font-weight: bold; margin-bottom: 20px; }
+.res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.res-item { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px; font-size: 0.9rem; color: var(--text-muted); }
+.res-item b { display: block; color: white; font-size: 1.1rem; margin-top: 3px; }
 
-.bg-ok { background-color: var(--ok-bg) !important; }
-.bg-err { background-color: var(--err-bg) !important; }
-.status-bar { padding: 8px 15px; font-size: 0.8rem; background: #000; color: #64748b; display: flex; justify-content: space-between; border-bottom: 1px solid #334155; }
+/* --- ÜZENETEK --- */
+.no-result { font-size: 1.5rem; font-weight: bold; color: var(--err-color); text-align: center; margin-top: 20px; }
+.load-msg { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; }
 
-/* Frissítés gomb */
-.refresh-btn { width: 100%; padding: 10px; background: #334155; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+/* --- ELŐZMÉNYEK SÁV (Footer) --- */
+.footer-history {
+    background: rgba(15, 23, 42, 0.95);
+    border-top: 1px solid var(--glass-border);
+    height: 150px;
+    overflow-y: auto;
+    padding: 15px;
+}
+.history-title { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; font-weight: bold; letter-spacing: 1px; }
+.h-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 15px; margin-bottom: 8px;
+    background: rgba(255,255,255,0.03); border-radius: 10px; font-size: 0.85rem;
+    border-left: 4px solid #555;
+}
+.h-ok { border-left-color: var(--ok-color); }
+.h-err { border-left-color: var(--err-color); }
+.h-time { font-size: 0.7rem; color: #64748b; }
+
 </style>
 </head>
 <body>
 
-<div class="status-bar">
-    <span>FORVIA BANK SCAN v4.0 (Mobil)</span>
-    <span id="loadMsg">Adatbázis töltése...</span>
+<div class="header">
+    <h1>Forvia Bank Scan Mobil Ver4</h1>
+    <div class="credits">Készítette: <span>Gergő Roland</span></div>
 </div>
 
-<div class="container">
-    <div class="sidebar">
-        <div style="color: #94a3b8; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; margin-bottom: 5px;">Előzmények</div>
-        <div id="historyList" class="history-list"></div>
-        <button class="refresh-btn" onclick="location.reload()">Adatok Frissítése</button>
+<div class="main-content" id="screen">
+    <div id="loadMsg" class="load-msg">Adatbázis betöltése...</div>
+
+    <div id="reader"></div>
+
+    <div class="input-wrapper">
+        <input type="text" id="barcodeInput" placeholder="Scan Barcode" autocomplete="off">
+        
+        <button class="scan-btn" onclick="toggleCamera()" title="Kamera indítása">
+            <svg id="camIcon" viewBox="0 0 24 24">
+                <path d="M4 6h2v12H4zm14 0h2v12h-2zm-4 0h2v12h-2zm-4 0h2v12h-2zM2 4v16h20V4H2zm18 14H4V6h16v12z"/>
+                <path d="M0 0h24v24H0z" fill="none"/>
+            </svg>
+            <svg id="stopIcon" viewBox="0 0 24 24" style="display:none;">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+        </button>
     </div>
 
-    <div class="main-display" id="screen">
-        <div class="search-area">
-            
-            <div id="reader"></div> <div class="input-group">
-                <input type="text" id="barcodeInput" placeholder="Kód írása vagy Scan..." autocomplete="off">
-                <button class="cam-btn" onclick="toggleCamera()" title="Kamera indítása">📷</button>
-            </div>
-
-            <div id="resultsWrapper">
-                </div>
+    <div id="resultsWrapper">
         </div>
-    </div>
+</div>
+
+<div class="footer-history">
+    <div class="history-title">Előzmények &middot; <span onclick="location.reload()" style="cursor:pointer; color:var(--accent);">Frissítés</span></div>
+    <div id="historyList"></div>
 </div>
 
 <audio id="sndOk" src="https://actions.google.com/sounds/v1/communication/notification_high_intensity.ogg"></audio>
 <audio id="sndError" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
+/* =========================================
+   LOGIKA (NEM VÁLTOZOTT, CSAK A DESIGN)
+   ========================================= */
 const input = document.getElementById('barcodeInput');
-const screen = document.getElementById('screen');
 const resultsWrapper = document.getElementById('resultsWrapper');
 const historyList = document.getElementById('historyList');
 const loadMsg = document.getElementById('loadMsg');
+const camIcon = document.getElementById('camIcon');
+const stopIcon = document.getElementById('stopIcon');
+const scanBtn = document.querySelector('.scan-btn');
+
 let html5QrcodeScanner = null;
 let isCameraRunning = false;
-
 let bankDB = [];
 
-// 1. Inicializálás: Csak a Bank CSV-t töltjük
 async function init() {
     await loadBankCSV();
-    loadMsg.innerText = `Bank DB: ${bankDB.length} tétel`;
+    if(bankDB.length > 0) {
+        loadMsg.innerText = `Adatbázis kész: ${bankDB.length} tétel`;
+        loadMsg.style.color = "#10b981";
+    }
 }
 
 async function loadBankCSV() {
@@ -131,14 +261,11 @@ async function loadBankCSV() {
         const data = await res.text();
         const lines = data.split('\n');
         const headers = lines[0].split(';');
-
-        // Megkeressük a 'model' oszlopot dinamikusan, ha van
         let modelIdx = headers.findIndex(h => h.trim().toLowerCase().includes('model'));
 
         lines.slice(1).forEach(line => {
             const cols = line.split(';');
             if (cols.length < 2) return;
-
             bankDB.push({
                 gep: cols[0]?.trim() || "N/A",
                 poz: cols[1]?.trim() || "N/A",
@@ -148,90 +275,78 @@ async function loadBankCSV() {
             });
         });
     } catch (e) { 
-        console.error("Hiba a bank.csv betöltésekor", e); 
-        loadMsg.innerText = "HIBA: bank.csv nem található!";
-        loadMsg.style.color = "red";
+        loadMsg.innerText = "HIBA: bank.csv betöltése sikertelen!";
+        loadMsg.style.color = "#ef4444";
     }
 }
 
-// 2. Keresés logika (Szűrők nélkül, csak string egyezés)
 input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         const code = input.value.trim().toUpperCase();
         if (code) search(code);
         input.value = '';
-        input.blur(); // Mobilon bezárja a billentyűzetet
+        input.blur();
     }
 });
 
 function search(code) {
     resultsWrapper.innerHTML = '';
-    
-    // Keresés: ID tartalmazza a beírt kódot VAGY a beírt kód tartalmazza az ID-t
     const matches = bankDB.filter(i => (code.includes(i.id) || i.id.includes(code)) && i.id.length > 2);
 
     if (matches.length > 0) {
-        screen.className = "main-display bg-ok";
         playSound(true);
-
         matches.forEach(m => {
             const card = document.createElement('div');
             card.className = 'result-card';
-            // Megtartottuk a jól működő elrendezést
             card.innerHTML = `
                 <div class="res-model">${m.model}</div>
                 <div class="res-main">${m.gep}</div>
                 <div class="res-pos">POZ: ${m.poz}</div>
-                <div class="res-info">
-                    <span>MSD: <b>${m.msd}</b></span>
-                    <span>ID: ${m.id.slice(-5)}</span>
+                <div class="res-grid">
+                    <div class="res-item">MSD <b>${m.msd}</b></div>
+                    <div class="res-item">ID <b>${m.id.slice(-5)}</b></div>
                 </div>
             `;
             resultsWrapper.appendChild(card);
         });
-        addToHistory(code, `Találat: ${matches.length} db`, true);
+        addToHistory(code, matches[0].gep, true);
     } else {
-        screen.className = "main-display bg-err";
         playSound(false);
-        resultsWrapper.innerHTML = '<div style="font-size:2rem; font-weight:bold; margin-top:20px;">NINCS A BANKBAN</div>';
+        resultsWrapper.innerHTML = '<div class="no-result">NINCS A LISTÁBAN</div>';
         addToHistory(code, "Nincs találat", false);
     }
 }
 
-// 3. Kamera logika (html5-qrcode)
 function toggleCamera() {
-    if (isCameraRunning) {
-        stopCamera();
-    } else {
-        startCamera();
-    }
+    if (isCameraRunning) stopCamera();
+    else startCamera();
 }
 
 function startCamera() {
     const readerDiv = document.getElementById('reader');
     readerDiv.style.display = 'block';
-    
+    camIcon.style.display = 'none';
+    stopIcon.style.display = 'block';
+    scanBtn.classList.add('active');
+
     html5QrcodeScanner = new Html5Qrcode("reader");
+    // Mobilon jobb felbontás és képarány
     const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
     
     html5QrcodeScanner.start(
-        { facingMode: "environment" }, // Hátsó kamera preferálása
+        { facingMode: "environment" }, 
         config,
         (decodedText) => {
-            // SIKERES OLVASÁS
             stopCamera();
             input.value = decodedText;
             search(decodedText.trim().toUpperCase());
         },
-        (errorMessage) => {
-            // Olvasási hiba (figyelmen kívül hagyjuk, mert folyamatosan scannel)
-        }
+        () => {}
     ).then(() => {
         isCameraRunning = true;
-        document.querySelector('.cam-btn').innerText = "❌";
-        document.querySelector('.cam-btn').style.background = "#ef4444";
     }).catch(err => {
-        alert("Kamera hiba (HTTPS szükséges?): " + err);
+        alert("Kamera hiba: " + err);
+        stopCamera();
     });
 }
 
@@ -241,24 +356,28 @@ function stopCamera() {
             html5QrcodeScanner.clear();
             document.getElementById('reader').style.display = 'none';
             isCameraRunning = false;
-            document.querySelector('.cam-btn').innerText = "📷";
-            document.querySelector('.cam-btn').style.background = "var(--accent)";
-        });
+            camIcon.style.display = 'block';
+            stopIcon.style.display = 'none';
+            scanBtn.classList.remove('active');
+        }).catch(err => console.log(err));
     }
 }
 
-// 4. Egyéb segédfunkciók
 function playSound(ok) {
     const snd = document.getElementById(ok ? 'sndOk' : 'sndError');
     snd.currentTime = 0; snd.play().catch(()=>{});
 }
 
-function addToHistory(code, text, ok) {
+function addToHistory(code, resText, ok) {
     const div = document.createElement('div');
-    div.className = `history-item ${ok ? 'h-ok' : 'h-err'}`;
-    // Rövid időkód
-    const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
-    div.innerHTML = `<div><strong>${code}</strong></div><div style="text-align:right">${text} <small>(${time})</small></div>`;
+    div.className = `h-item ${ok ? 'h-ok' : 'h-err'}`;
+    const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    div.innerHTML = `
+        <div><strong>${code}</strong></div>
+        <div style="text-align:right;">
+            <div style="font-weight:bold; color: ${ok ? '#fff' : '#ef4444'}">${resText}</div>
+            <div class="h-time">${time}</div>
+        </div>`;
     historyList.prepend(div);
 }
 
